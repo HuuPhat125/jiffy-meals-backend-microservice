@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resturant-service
+  namespace: jiffymeals
+  labels:
+    app: resturant-service
+spec:
+  selector:
+    matchLabels:
+      app: resturant-service
+  template:
+    metadata:
+      labels:
+        app: resturant-service
+    spec: 
+      containers:
+      - name: resturant-service
+        image: ujusophy/resturant-service:latest
+        ports:
+        - containerPort: 8084
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: resturant-service
+  namespace: jiffymeals
+spec:
+  selector:
+    app: resturant-service
+  ports:
+    - protocol: TCP
+      port: 8084
+      targetPort: 8084
+      nodePort: 30007
+  type: NodePort
+
+
+

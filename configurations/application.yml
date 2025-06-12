@@ -1,0 +1,13 @@
+app:
+  name: Jiffy Meals
+  developers:
+    - name: Ucheka Chike
+      email: chikeucheka@gmail.com
+      role: Backend Developer
+    - name: Njoku Sophia Ujunwa
+      email: njokusophia@gmail.com
+      role: DevOps
+  version: 1.0.0
+  secret: '{cipher}2ba87406958e04d7fe1dba271fdaeef7dedefd1957360ff042bbab8616cf2c21'
+  base:
+    url: http://localhost:8080/

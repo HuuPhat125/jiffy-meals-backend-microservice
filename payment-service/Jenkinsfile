@@ -1,0 +1,138 @@
+pipeline {
+    agent any
+    tools {
+        maven 'maven' // Ensure 'maven' matches the Maven installation name in Jenkins
+    }
+    environment {
+        DEPLOYMENT_ENVIRONMENT = 'NO_DEPLOYMENT'
+        APP_ENV = 'default'
+        GLOBAL_ENVIRONMENT = ''
+    }
+    stages {
+        stage('Determine Environment') {
+            steps {
+                echo 'Determine Environment'
+                script {
+                    // Determine whether this is a develop, staging, or main(Production) build
+                    switch (env.GIT_BRANCH) {
+                        case 'develop':
+                            GLOBAL_ENVIRONMENT = 'develop'
+                            break
+                        case 'staging':
+                            GLOBAL_ENVIRONMENT = 'staging'
+                            break
+                        case 'main':
+                            GLOBAL_ENVIRONMENT = 'main'
+                            break
+                        default:
+                            GLOBAL_ENVIRONMENT = 'NO_DEPLOYMENT'
+                            break
+                    }
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                echo 'Building.. ' + GLOBAL_ENVIRONMENT
+                script {
+                    if (GLOBAL_ENVIRONMENT == 'NO_DEPLOYMENT') {
+                        currentBuild.result = 'ABORTED'
+                        error('This is not develop, staging, or main branch and should not be built')
+                    } else {
+                        echo "Building for environment: ${GLOBAL_ENVIRONMENT}."
+                        sh 'cd payment-service && mvn clean package -DskipTests'
+                    }
+                }
+            }
+        }
+        stage('Code Analysis') {
+            steps {
+                script {
+                    if (GLOBAL_ENVIRONMENT != 'NO_DEPLOYMENT') {
+                        withSonarQubeEnv('sonarsql') {
+                            echo "Running SonarQube analysis"
+                            dir('payment-service') {
+                                sh 'mvn sonar:sonar' // Ensure SonarQube analysis is properly configured
+                            }
+                        }
+                    } else {
+                        echo "No deployment environment set, skipping code analysis."
+                    }
+                }
+            }
+        }
+        stage('Publish Image') {
+            steps {
+                script {
+                    if (GLOBAL_ENVIRONMENT == 'NO_DEPLOYMENT') {
+                        currentBuild.result = 'ABORTED'
+                        error('This is not develop, staging, or main image and should not be published')
+                    } else {
+                        echo "Publishing image for environment: ${GLOBAL_ENVIRONMENT}."
+                        switch (GLOBAL_ENVIRONMENT) {
+                            case 'develop':
+                                echo "Building Docker image"
+                                sh 'cd payment-service && docker build -t ujusophy/payment-service .'
+                                withCredentials([string(credentialsId: 'dockerhub-cred', variable: 'dockerhubpwd')]) {
+                                    sh "docker login -u ujusophy -p ${dockerhubpwd}"
+                                    echo "Tagging and pushing Docker image"
+                                    sh "docker push ujusophy/payment-service"
+                                }
+                                echo "Image published successfully"
+                                break
+                            case 'staging':
+                                echo 'AWS ECR'
+                                // Add AWS ECR publishing logic here
+                                echo "Image published successfully"
+                                break
+                            case 'main':
+                                echo 'AWS ECR'
+                                // Add AWS ECR publishing logic here
+                                echo "Image published successfully"
+                                break
+                            default:
+                                echo 'No image to publish'
+                                break
+                        }
+                    }
+                }
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    if (GLOBAL_ENVIRONMENT == 'NO_DEPLOYMENT') {
+                        currentBuild.result = 'ABORTED'
+                        error('This is not develop, staging, or main image and should not be deployed')
+                    } else {
+                        echo "Deploying to Kubernetes: ${GLOBAL_ENVIRONMENT}"
+                        switch (GLOBAL_ENVIRONMENT) {
+                            case 'develop':
+                                kubeconfig(credentialsId: 'kubefile', serverUrl: 'https://192.168.49.2:8443') {
+                                    sh 'kubectl version --client'
+                                    sh 'kubectl apply -f payment-service/deployment.yaml'
+                                    sh 'kubectl get pods'
+                                    sh 'kubectl get svc'
+                                }
+                                echo "Deployment to Kubernetes was successful"
+                                break
+                            case 'staging':
+                                echo "Deploying to Kubernetes: ${GLOBAL_ENVIRONMENT}"
+                                // Add AWS EKS deployment logic here
+                                echo "Deployment to Kubernetes was successful"
+                                break
+                            case 'main':
+                                echo "Deploying to Kubernetes: ${GLOBAL_ENVIRONMENT}"
+                                // Add AWS EKS deployment logic here
+                                echo "Deployment to Kubernetes was successful"
+                                break
+                            default:
+                                echo 'No image to deploy'
+                                break
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

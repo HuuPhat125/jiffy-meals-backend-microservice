@@ -1,0 +1,23 @@
+server:
+  port: 8083
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/jiffymeals
+    username: postgres
+    password: kxke22@me
+  hikari:
+    connectionTimeout: 20000
+    maximumPoolSize: 5
+  jpa:
+    hibernate:
+      ddl-auto: update
+jiffy:
+  meals:
+    gl:
+      account:
+        number: 8120901994
+        name : Jiffy Meals
+payment:
+  gateway:
+    base:
+      url: http://localhost:8086

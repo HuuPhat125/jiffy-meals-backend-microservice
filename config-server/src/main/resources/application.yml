@@ -1,0 +1,17 @@
+server:
+  port: 8762
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: file:///${user.dir}/configurations
+        encrypt:
+          enabled: false
+#encrypt:
+#  key: kxke22@me
+

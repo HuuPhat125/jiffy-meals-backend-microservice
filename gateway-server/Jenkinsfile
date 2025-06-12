@@ -1,0 +1,54 @@
+pipeline {
+    agent any
+    tools {
+        maven 'maven' // Tên Maven đã cấu hình trong Jenkins
+    }
+    environment {
+        GLOBAL_ENVIRONMENT = 'main' // Chỉ còn nhánh main
+    }
+    stages {
+        stage('Build') {
+            steps {
+                echo "Building for environment: ${GLOBAL_ENVIRONMENT}"
+                sh 'cd gateway-server && mvn clean package -DskipTests'
+            }
+        }
+
+        stage('Code Analysis') {
+            steps {
+                withSonarQubeEnv('sonarsql') {
+                    echo "Running SonarQube analysis"
+                    dir('gateway-server') {
+                        sh 'mvn sonar:sonar'
+                    }
+                }
+            }
+        }
+
+        stage('Publish Image') {
+            steps {
+                echo "Building Docker image"
+                sh 'cd gateway-server && docker build -t huuphat125/gateway-server .'
+                withCredentials([string(credentialsId: 'docker_cred', variable: 'dockerpwd')]) {
+                    sh "docker login -u huuphat125 -p ${dockerpwd}"
+                    echo "Pushing Docker image"
+                    sh "docker push huuphat125/gateway-server"
+                }
+                echo "Image published successfully"
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo "Deploying to Kubernetes (Minikube)"
+                kubeconfig(credentialsId: 'kube_config', serverUrl: 'https://127.0.0.1:53005', caCertificate: '') {
+                    sh 'kubectl version --client'
+                    sh 'kubectl apply -f gateway-server/deployment.yaml --namespace=jiffymeals'
+                    sh 'kubectl get pods --namespace=jiffymeals'
+                    sh 'kubectl get svc --namespace=jiffymeals'
+                }
+                echo "Deployment to Kubernetes (Minikube) was successful"
+            }
+        }
+    }
+}
