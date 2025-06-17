@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: eureka-server
-        image: ujusophy/config-server:latest
+        image: huuphat125/config-server:latest
         ports:
         - containerPort: 8761
 ---
