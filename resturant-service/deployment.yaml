@@ -16,7 +16,7 @@ spec:
     spec: 
       containers:
       - name: resturant-service
-        image: ujusophy/resturant-service:latest
+        image: huuphat125/resturant-service:latest
         ports:
         - containerPort: 8084
 ---
