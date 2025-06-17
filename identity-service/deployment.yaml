@@ -16,7 +16,7 @@ spec:
     spec: 
       containers:
       - name: identity-service
-        image: ujusophy/identity-service:latest
+        image: huuphat125/identity-service:latest
         ports:
         - containerPort: 8081
 ---
