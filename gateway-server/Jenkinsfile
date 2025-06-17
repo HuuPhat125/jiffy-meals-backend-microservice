@@ -10,9 +10,12 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building for environment: ${GLOBAL_ENVIRONMENT}"
-                sh 'cd gateway-server && && mvn clean package'
+                dir('gateway-server') {
+                    sh 'mvn clean package' 
+                }
             }
-        }
+}
+
 
         stage('Code Analysis') {
             steps {
