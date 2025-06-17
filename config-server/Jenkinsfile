@@ -47,10 +47,10 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    echo "Deploying to Kubernetes (main environment)..."
-                    kubeconfig(credentialsId: 'kubefile', serverUrl: 'https://192.168.49.2:8443') {
+                    echo "Deploying to Kubernetes (Minikube)"
+                    kubeconfig(credentialsId: 'kube_config', serverUrl: 'https://127.0.0.1:53005', caCertificate: '') {
                         sh 'kubectl version --client'
-                        sh 'kubectl apply -f config-server/deployment.yaml'
+                        sh 'kubectl apply -f config-server/deployment.yaml --namespace=jiffymeals'
                         sh 'kubectl get pods --namespace jiffymeals'
                         sh 'kubectl get svc --namespace jiffymeals'
                     }
