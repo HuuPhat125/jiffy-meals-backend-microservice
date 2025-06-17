@@ -17,7 +17,7 @@ spec:
     spec: 
       containers:
       - name: payment-service
-        image: ujusophy/payment-service:latest
+        image: huuphat125/payment-service:latest
         ports:
         - containerPort: 8083
 ---
