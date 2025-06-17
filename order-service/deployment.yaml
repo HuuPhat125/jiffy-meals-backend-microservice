@@ -16,7 +16,7 @@ spec:
     spec: 
       containers:
       - name: order-service
-        image: ujusophy/order-service:latest
+        image: huuphat125/order-service:latest
         ports:
         - containerPort: 8082
 ---
