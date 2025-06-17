@@ -25,13 +25,22 @@ pipeline {
             }
         }
 
+        stage('Security Scan - Trivy') {
+            steps {
+                echo "Running Trivy security scan on Docker image"
+                // Build image để quét
+                sh 'docker build -t huuphat125/gateway-server ./gateway-server'
+                
+                // Trivy scan image đã build
+                sh 'trivy image --exit-code 1 --severity CRITICAL,HIGH huuphat125/gateway-server || true'
+            }
+        }
+
         stage('Publish Image') {
             steps {
-                echo "Building Docker image"
-                sh 'cd gateway-server && docker build -t huuphat125/gateway-server .'
+                echo "Publishing Docker image"
                 withCredentials([string(credentialsId: 'docker_cred', variable: 'dockerpwd')]) {
                     sh "docker login -u huuphat125 -p ${dockerpwd}"
-                    echo "Pushing Docker image"
                     sh "docker push huuphat125/gateway-server"
                 }
                 echo "Image published successfully"
